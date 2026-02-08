@@ -8,7 +8,7 @@
   {
     "id": 2,
     "task": "Learn Rust",
-    "completed": false,
+    "completed": true,
     "due_date": "2026-02-14"
   },
   {

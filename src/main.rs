@@ -74,7 +74,10 @@ impl TodoList {
 
     fn list(&self) {
         if self.todos.is_empty() {
-            println!("{}", "No tasks yet. Add one to get started!".yellow());
+            println!("\n{}", "┌─────────────────────────────────┐".cyan());
+            println!("{}", "│  No tasks yet! Add one to get  │".cyan());
+            println!("{}", "│  started with [a]dd command.   │".cyan());
+            println!("{}\n", "└─────────────────────────────────┘".cyan());
             return;
         }
 
@@ -89,38 +92,57 @@ impl TodoList {
         });
 
         let today = Local::now().date_naive();
+        let total = todos.len();
+        let completed = todos.iter().filter(|t| t.completed).count();
+        let pending = total - completed;
 
-        println!("\n{}", "📋 Your Tasks:".bold().cyan());
-        println!("{}", "─────────────────────────────────".cyan());
+        println!("\n{}", "╔═══════════════════════════════════╗".bright_blue().bold());
+        println!("{}", "║       📋 YOUR TASKS               ║".bright_blue().bold());
+        println!("{}", "╚═══════════════════════════════════╝".bright_blue().bold());
+        println!("{} {} total  {} {} completed  {} {} pending\n", 
+            "📊".bold(), 
+            total.to_string().bright_white().bold(),
+            "✓".green(),
+            completed.to_string().green().bold(),
+            "○".yellow(),
+            pending.to_string().yellow().bold()
+        );
+        
         for todo in &todos {
-            let status = if todo.completed { "✓".green() } else { " ".normal() };
+            let status = if todo.completed { 
+                "✓".green().bold() 
+            } else { 
+                "○".bright_black() 
+            };
+            
             let due_info = if let Some(date) = todo.due_date {
                 let days_diff = (date - today).num_days();
                 let formatted_date = date.format("%d-%m-%Y");
                 if date < today && !todo.completed {
-                    format!(" OVERDUE ({})", formatted_date).red().bold()
+                    format!(" │ {} {}", "OVERDUE".red().bold(), formatted_date.to_string().red())
                 } else if days_diff == 0 {
-                    " Due TODAY".yellow().bold()
+                    format!(" │ {}", "DUE TODAY".yellow().bold())
                 } else if days_diff == 1 {
-                    " Due tomorrow".yellow()
+                    format!(" │ {}", "Due tomorrow".yellow())
                 } else if days_diff <= 3 {
-                    format!(" Due in {} days", days_diff).yellow()
+                    format!(" │ {} {}", "Due in".yellow(), format!("{} days", days_diff).yellow())
                 } else {
-                    format!(" (Due: {})", formatted_date).normal()
+                    format!(" │ Due {}", formatted_date.to_string().bright_black())
                 }
             } else {
-                "".normal()
+                String::new()
             };
             
             let task_text = if todo.completed {
-                todo.task.dimmed()
+                todo.task.dimmed().strikethrough()
             } else {
-                todo.task.normal()
+                todo.task.bright_white()
             };
             
-            println!("[{}] {}. {}{}", status, todo.id, task_text, due_info);
+            let id_display = format!("{:2}", todo.id).bright_black();
+            println!("  {} {} {}{}", status, id_display, task_text, due_info);
         }
-        println!("{}\n", "─────────────────────────────────".cyan());
+        println!();
     }
 
     fn complete(&mut self, id: usize) {
@@ -147,11 +169,17 @@ impl TodoList {
 fn main() {
     let mut todo_list = TodoList::load();
     
-    println!("{}", "🚀 Welcome to Rust Todo App!".bold().bright_blue());
+    // Welcome banner
+    println!("\n{}", "═══════════════════════════════════".bright_blue());
+    println!("{}", "   🚀 RUST TODO APP 📋".bold().bright_blue());
+    println!("{}", "═══════════════════════════════════".bright_blue());
+    println!("{}\n", "   Stay organized, stay productive!".italic().bright_black());
     
     loop {
-        println!("\n{}", "Commands: [a]dd | [l]ist | [c]omplete | [d]elete | [q]uit".bright_black());
-        print!("{} ", ">".cyan().bold());
+        println!("{}", "Commands:".bright_black());
+        println!("  {} Add task    {} List tasks    {} Complete", "[a]".cyan().bold(), "[l]".cyan().bold(), "[c]".cyan().bold());
+        println!("  {} Delete      {} Quit", "[d]".cyan().bold(), "[q]".cyan().bold());
+        print!("\n{} ", "❯".cyan().bold());
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
@@ -160,12 +188,13 @@ fn main() {
 
         match input {
             "a" | "add" => {
-                print!("Enter task: ");
+                println!("\n{}", "┌─ Add New Task ─────────────────┐".cyan());
+                print!("│ {} ", "Task:".bright_white());
                 io::stdout().flush().unwrap();
                 let mut task = String::new();
                 io::stdin().read_line(&mut task).unwrap();
                 
-                print!("Due date (DD-MM-YYYY) or press Enter to skip: ");
+                print!("│ {} ", "Due date (DD-MM-YYYY) or Enter:".bright_white());
                 io::stdout().flush().unwrap();
                 let mut date_input = String::new();
                 io::stdin().read_line(&mut date_input).unwrap();
@@ -178,6 +207,7 @@ fn main() {
                         Ok(date) => {
                             let today = Local::now().date_naive();
                             if date < today {
+                                println!("{}", "└─────────────────────────────────┘".cyan());
                                 println!("{}", "❌ Due date cannot be in the past. Task added without due date.".red());
                                 None
                             } else {
@@ -185,11 +215,16 @@ fn main() {
                             }
                         }
                         Err(_) => {
+                            println!("{}", "└─────────────────────────────────┘".cyan());
                             println!("{}", "❌ Invalid date format. Task added without due date.".red());
                             None
                         }
                     }
                 };
+                
+                if due_date.is_some() || date_input.is_empty() {
+                    println!("{}", "└─────────────────────────────────┘".cyan());
+                }
                 
                 todo_list.add(task.trim().to_string(), due_date);
             }
@@ -197,7 +232,7 @@ fn main() {
                 todo_list.list();
             }
             "c" | "complete" => {
-                print!("Enter task ID to complete: ");
+                print!("Task ID to complete: ");
                 io::stdout().flush().unwrap();
                 let mut id_input = String::new();
                 io::stdin().read_line(&mut id_input).unwrap();
@@ -208,7 +243,7 @@ fn main() {
                 }
             }
             "d" | "delete" => {
-                print!("Enter task ID to delete: ");
+                print!("Task ID to delete: ");
                 io::stdout().flush().unwrap();
                 let mut id_input = String::new();
                 io::stdin().read_line(&mut id_input).unwrap();
@@ -219,7 +254,10 @@ fn main() {
                 }
             }
             "q" | "quit" => {
-                println!("{}", "👋 Goodbye!".bright_blue());
+                println!("\n{}", "═══════════════════════════════════".bright_blue());
+                println!("{}", "   👋 Thanks for using Todo App!".bright_blue().bold());
+                println!("{}", "   See you next time! ✨".bright_blue());
+                println!("{}\n", "═══════════════════════════════════".bright_blue());
                 break;
             }
             _ => {
