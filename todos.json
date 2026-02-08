@@ -2,21 +2,31 @@
   {
     "id": 1,
     "task": "Put Moza Bundle for Sale in FB",
-    "completed": true
+    "completed": true,
+    "due_date": "2026-02-14"
   },
   {
     "id": 2,
     "task": "Learn Rust",
-    "completed": false
+    "completed": false,
+    "due_date": "2026-02-14"
   },
   {
     "id": 3,
     "task": "Fly Drone Mini4K",
-    "completed": false
+    "completed": false,
+    "due_date": "2026-02-14"
   },
   {
     "id": 4,
     "task": "Pack Luggage",
-    "completed": false
+    "completed": false,
+    "due_date": "2026-02-14"
+  },
+  {
+    "id": 5,
+    "task": "Clean room",
+    "completed": false,
+    "due_date": "2026-02-14"
   }
 ]
